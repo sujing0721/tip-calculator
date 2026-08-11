@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tip Check — Tip Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page-bg: #E4DCC6;
+    --paper: #F6F1E4;
+    --paper-shadow: #d8cfb4;
+    --ink: #2A2420;
+    --ink-soft: #5b5348;
+    --red: #B4362B;
+    --green: #34513C;
+    --brass: #C79A3E;
+    --line: rgba(42,36,32,0.18);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    background: var(--page-bg);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(0,0,0,0.05), transparent 45%);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 32px 16px 64px;
+  }
+
+  /* ---------- Header / signage ---------- */
+  .signage{
+    text-align:center;
+    margin-bottom: 28px;
+  }
+  .signage .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color: var(--red);
+    margin: 0 0 6px;
+  }
+  .signage h1{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-size: clamp(34px, 7vw, 52px);
+    margin:0;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .signage h1 span{
+    color: var(--green);
+    font-style:italic;
+    font-weight:600;
+  }
+  .signage p{
+    font-size:14px;
+    color: var(--ink-soft);
+    margin: 8px 0 0;
+  }
+
+  /* ---------- Layout ---------- */
+  .counter{
+    width:100%;
+    max-width: 920px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    align-items:start;
+  }
+  @media (max-width: 760px){
+    .counter{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Order pad (inputs) ---------- */
+  .pad{
+    background: var(--paper);
+    border-radius: 6px;
+    padding: 28px 26px 30px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 14px 30px -18px rgba(42,36,32,0.35);
+    border: 1px solid var(--line);
+  }
+  .field{ margin-bottom: 26px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+    margin-bottom:10px;
+  }
+
+  .bill-input{
+    display:flex;
+    align-items:baseline;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 6px;
+  }
+  .bill-input .sign{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:26px;
+    margin-right:6px;
+    color: var(--ink-soft);
+  }
+  .bill-input input{
+    border:none;
+    background:transparent;
+    outline:none;
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:36px;
+    width:100%;
+    color: var(--ink);
+  }
+  .bill-input input::placeholder{ color:#b9b0a0; }
+
+  .tip-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:8px;
+  }
+  .tip-btn{
+    font-family:'Space Mono', monospace;
+    font-size:15px;
+    font-weight:700;
+    padding: 12px 4px;
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    color: var(--ink);
+    cursor:pointer;
+    transition: background .15s ease, color .15s ease, transform .1s ease;
+  }
+  .tip-btn:hover{ transform: translateY(-1px); }
+  .tip-btn.active{
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--paper);
+  }
+
+  .custom-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+  }
+  .custom-row span{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color: var(--ink-soft);
+    white-space:nowrap;
+  }
+  .custom-row input[type="range"]{
+    flex:1;
+    accent-color: var(--red);
+  }
+  .custom-row input[type="number"]{
+    width:64px;
+    font-family:'Space Mono', monospace;
+    font-size:15px;
+    font-weight:700;
+    text-align:right;
+    border:1.5px solid var(--line);
+    border-radius:4px;
+    padding:6px 8px;
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .stepper button{
+    width:38px; height:38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    background:transparent;
+    font-family:'Space Mono', monospace;
+    font-size:18px;
+    line-height:1;
+    color: var(--ink);
+    cursor:pointer;
+  }
+  .stepper button:active{ background: var(--ink); color: var(--paper); }
+  .stepper .count{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:26px;
+    min-width: 30px;
+    text-align:center;
+  }
+
+  .round-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:22px;
+    padding-top:18px;
+    border-top: 1px dashed var(--line);
+  }
+  .round-row label{
+    margin:0;
+    text-transform:none;
+    font-family:'DM Sans', sans-serif;
+    font-size:14px;
+    letter-spacing:normal;
+    color: var(--ink);
+  }
+  .switch{
+    position:relative;
+    width:44px; height:24px;
+    flex-shrink:0;
+  }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .track{
+    position:absolute; inset:0;
+    background: #cfc6b0;
+    border-radius: 999px;
+    transition: background .15s ease;
+  }
+  .switch .track::before{
+    content:"";
+    position:absolute;
+    width:18px; height:18px;
+    left:3px; top:3px;
+    background: var(--paper);
+    border-radius:50%;
+    transition: transform .15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .switch input:checked + .track{ background: var(--green); }
+  .switch input:checked + .track::before{ transform: translateX(20px); }
+
+  /* ---------- Receipt ---------- */
+  .receipt-wrap{
+    position:relative;
+    padding: 14px 0;
+  }
+  .receipt{
+    position:relative;
+    background: var(--paper);
+    color: var(--green);
+    font-family:'Space Mono', monospace;
+    padding: 26px 26px 22px;
+    box-shadow: 0 18px 34px -20px rgba(42,36,32,0.45);
+  }
+  .receipt::before, .receipt::after{
+    content:"";
+    position:absolute;
+    left:0; right:0;
+    height:11px;
+    background:
+      linear-gradient(135deg, var(--page-bg) 50%, transparent 50%) 0 0/16px 16px repeat-x,
+      linear-gradient(45deg, var(--page-bg) 50%, transparent 50%) 0 0/16px 16px repeat-x;
+  }
+  .receipt::before{ top:-1px; }
+  .receipt::after{ bottom:-1px; transform: scaleY(-1); }
+
+  .receipt .r-title{
+    text-align:center;
+    color: var(--ink);
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.18em;
+    margin-bottom:4px;
+  }
+  .receipt .r-sub{
+    text-align:center;
+    font-size:11px;
+    color: var(--ink-soft);
+    margin-bottom:16px;
+  }
+  .receipt .r-divider{
+    border-top: 1px dashed var(--line);
+    margin: 14px 0;
+  }
+  .r-line{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    color: var(--ink-soft);
+    padding: 4px 0;
+  }
+  .r-line .val{ color: var(--ink); }
+
+  .r-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-top:6px;
+  }
+  .r-total .label{
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+  }
+  .r-total .amount{
+    font-size:30px;
+    font-weight:700;
+    color: var(--red);
+  }
+
+  .r-perperson{
+    margin-top: 18px;
+    background: rgba(52,81,60,0.07);
+    border: 1px dashed var(--green);
+    border-radius:4px;
+    padding: 12px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .r-perperson .label{
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: var(--green);
+  }
+  .r-perperson .amount{
+    font-size:22px;
+    font-weight:700;
+    color: var(--green);
+  }
+
+  .stamp{
+    position:absolute;
+    top: 34px;
+    right: 22px;
+    width: 64px; height:64px;
+    border: 2.5px solid var(--red);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform: rotate(-14deg);
+    opacity:0.85;
+  }
+  .stamp span{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:15px;
+    color: var(--red);
+  }
+
+  footer{
+    margin-top: 40px;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color: var(--ink-soft);
+    text-align:center;
+    max-width:520px;
+    line-height:1.7;
+  }
+</style>
+</head>
+<body>
+
+  <div class="signage">
+    <p class="eyebrow">Est. at the table</p>
+    <h1>TIP <span>Check</span></h1>
+    <p>Figure out the tip, the total, and who owes what — before the check gets cold.</p>
+  </div>
+
+  <div class="counter">
+    <!-- ORDER PAD -->
+    <div class="pad">
+      <div class="field">
+        <label for="bill">Bill amount</label>
+        <div class="bill-input">
+          <span class="sign">$</span>
+          <input type="number" id="bill" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tip %</label>
+        <div class="tip-grid" id="tipGrid">
+          <button class="tip-btn" data-pct="15">15%</button>
+          <button class="tip-btn active" data-pct="18">18%</button>
+          <button class="tip-btn" data-pct="20">20%</button>
+          <button class="tip-btn" data-pct="25">25%</button>
+        </div>
+        <div class="custom-row">
+          <span>Custom</span>
+          <input type="range" id="tipRange" min="0" max="50" value="18">
+          <input type="number" id="tipNumber" min="0" max="100" value="18">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Split between</label>
+        <div class="stepper">
+          <button id="minusPeople" aria-label="Fewer people">–</button>
+          <span class="count" id="peopleCount">1</span>
+          <button id="plusPeople" aria-label="More people">+</button>
+        </div>
+      </div>
+
+      <div class="round-row">
+        <label for="roundToggle">Round total up to the nearest dollar</label>
+        <label class="switch">
+          <input type="checkbox" id="roundToggle">
+          <span class="track"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- RECEIPT -->
+    <div class="receipt-wrap">
+      <div class="receipt">
+        <div class="stamp"><span id="stampPct">18%</span></div>
+        <div class="r-title">TIP CHECK</div>
+        <div class="r-sub">— guest copy —</div>
+
+        <div class="r-line"><span>Bill</span><span class="val" id="outBill">$0.00</span></div>
+        <div class="r-line"><span>Tip (<span id="outPct">18</span>%)</span><span class="val" id="outTip">$0.00</span></div>
+
+        <div class="r-divider"></div>
+
+        <div class="r-total">
+          <span class="label">Total</span>
+          <span class="amount" id="outTotal">$0.00</span>
+        </div>
+
+        <div class="r-perperson">
+          <span class="label">Per person (<span id="outPeople">1</span>)</span>
+          <span class="amount" id="outPerPerson">$0.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Tip suggestions reflect common U.S. dining norms — always tip what feels right for your service and situation.
+  </footer>
+
+<script>
+  const billInput = document.getElementById('bill');
+  const tipGrid = document.getElementById('tipGrid');
+  const tipRange = document.getElementById('tipRange');
+  const tipNumber = document.getElementById('tipNumber');
+  const minusPeople = document.getElementById('minusPeople');
+  const plusPeople = document.getElementById('plusPeople');
+  const peopleCountEl = document.getElementById('peopleCount');
+  const roundToggle = document.getElementById('roundToggle');
+
+  const outBill = document.getElementById('outBill');
+  const outTip = document.getElementById('outTip');
+  const outPct = document.getElementById('outPct');
+  const outTotal = document.getElementById('outTotal');
+  const outPeople = document.getElementById('outPeople');
+  const outPerPerson = document.getElementById('outPerPerson');
+  const stampPct = document.getElementById('stampPct');
+
+  let state = { bill: 0, pct: 18, people: 1, round: false };
+
+  function fmt(n){
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function setActiveButton(pct){
+    [...tipGrid.children].forEach(btn=>{
+      btn.classList.toggle('active', Number(btn.dataset.pct) === pct);
+    });
+  }
+
+  function recalc(){
+    const bill = state.bill;
+    const pct = state.pct;
+    const people = state.people;
+
+    let tip = bill * (pct / 100);
+    let total = bill + tip;
+
+    if (state.round){
+      const roundedTotal = Math.ceil(total);
+      tip = tip + (roundedTotal - total);
+      total = roundedTotal;
+    }
+
+    const perPerson = people > 0 ? total / people : total;
+
+    outBill.textContent = fmt(bill);
+    outTip.textContent = fmt(tip);
+    outPct.textContent = pct;
+    outTotal.textContent = fmt(total);
+    outPeople.textContent = people;
+    outPerPerson.textContent = fmt(perPerson);
+    stampPct.textContent = pct + '%';
+  }
+
+  billInput.addEventListener('input', e=>{
+    state.bill = parseFloat(e.target.value) || 0;
+    recalc();
+  });
+
+  tipGrid.addEventListener('click', e=>{
+    const btn = e.target.closest('.tip-btn');
+    if(!btn) return;
+    const pct = Number(btn.dataset.pct);
+    state.pct = pct;
+    tipRange.value = pct;
+    tipNumber.value = pct;
+    setActiveButton(pct);
+    recalc();
+  });
+
+  function onCustomChange(val){
+    let pct = Math.max(0, Math.min(100, Number(val) || 0));
+    state.pct = pct;
+    tipRange.value = Math.min(50, pct);
+    tipNumber.value = pct;
+    setActiveButton(pct);
+    recalc();
+  }
+
+  tipRange.addEventListener('input', e=> onCustomChange(e.target.value));
+  tipNumber.addEventListener('input', e=> onCustomChange(e.target.value));
+
+  minusPeople.addEventListener('click', ()=>{
+    state.people = Math.max(1, state.people - 1);
+    peopleCountEl.textContent = state.people;
+    recalc();
+  });
+  plusPeople.addEventListener('click', ()=>{
+    state.people = Math.min(50, state.people + 1);
+    peopleCountEl.textContent = state.people;
+    recalc();
+  });
+
+  roundToggle.addEventListener('change', e=>{
+    state.round = e.target.checked;
+    recalc();
+  });
+
+  recalc();
+</script>
+
+</body>
+</html>
